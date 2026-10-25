@@ -44,6 +44,12 @@ The examples here handle that loop for you:
 
 Built and run by [Yuki Nakazawa](https://nkzw.jp/) in Japan. The name comes from "egosa" (ego search) plus the verb ending "-ru": [the story of the name](https://nkzw.jp/2026/10/24/egosaru_name_origin_en/).
 
+| | |
+|---|---|
+| Developer | Yuki Nakazawa: [blog](https://nkzw.jp/) · [LinkedIn](https://www.linkedin.com/in/yukinakazawa/) · [X](https://x.com/YukiNakazawa331) · [Telegram](https://t.me/yknkzw) |
+| Operated by | [SkyClear Co., Ltd.](https://www.skyclear.co.jp/) |
+| Service | [Egosaru web tool](https://gstudio1.com/suggest/en/posts/google) · [API docs](https://gstudio1.com/api/en/) |
+
 ## License
 
 MIT for the examples in this repository. The API itself is covered by its [terms of service](https://gstudio1.com/api/en/terms/).
