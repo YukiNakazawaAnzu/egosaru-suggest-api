@@ -1,0 +1,212 @@
+openapi: 3.0.3
+info:
+  title: Egosaru Suggest API
+  version: "1.0"
+  description: |
+    Expanded autocomplete suggestions from Google, Bing, YouTube, Amazon, eBay, Shopee, DuckDuckGo and the
+    regional engines (Baidu, Yandex, Naver, Daum, Yahoo!, Rakuten), in 20 languages with selectable countries.
+    Each keyword is expanded with a space, the language's own letters, A-Z and 0-9.
+
+    A keyword that is not cached yet is queued: the API answers `202` with `retry_after_seconds`.
+    Repeat the same request after that many seconds to get `200`. Results are cached for 7 days.
+
+    Documentation: https://gstudio1.com/api/en/ . Free key: log in at gstudio1.com, user menu "API".
+  termsOfService: https://gstudio1.com/api/en/terms/
+  contact:
+    name: Yuki Nakazawa
+    url: https://nkzw.jp/
+servers:
+  - url: https://gstudio1.com/api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: suggest
+  - name: account
+paths:
+  /{source}/suggest:
+    get:
+      tags: [suggest]
+      summary: Expanded autocomplete suggestions for a keyword
+      operationId: getSuggestions
+      parameters:
+        - name: source
+          in: path
+          required: true
+          description: Search engine or store. Regional engines are available only for the languages listed in the docs.
+          schema:
+            type: string
+            enum: [google, bing, youtube, amazon, ebay, shopee, duckduckgo, baidu, yandex, naver, daum, yahoo, rakuten]
+        - name: q
+          in: query
+          required: true
+          description: Keyword, 1-60 characters. Case, width and spaces are normalized.
+          schema: { type: string, minLength: 1, maxLength: 60 }
+          example: running shoes
+        - name: lang
+          in: query
+          required: false
+          description: Language code (default `ja`; set it explicitly). One of the 20 site languages, e.g. en, es, zh, zh-tw, ko, ru, ar, hi, pt, fr, de, id, vi, th, tr, it, pl, uk, nl.
+          schema: { type: string, default: ja }
+          example: en
+        - name: country
+          in: query
+          required: false
+          description: Market within the language, ISO 3166-1 alpha-2 (e.g. `en` + `gb`, `es` + `mx`, `pt` + `br`). Applies to Google, YouTube, Bing, DuckDuckGo and Amazon.
+          schema: { type: string, minLength: 2, maxLength: 2 }
+          example: us
+        - name: group
+          in: query
+          required: false
+          description: "`all` (default) or a comma-separated subset of `itself,nihongo,native,alphabet,number`."
+          schema: { type: string, default: all }
+        - name: flat
+          in: query
+          required: false
+          description: "`1` returns one deduplicated `suggestions` array instead of the grouped `data` object."
+          schema: { type: string, enum: ["1"] }
+      responses:
+        "200":
+          description: Suggestions are ready.
+          headers:
+            X-RateLimit-Limit: { schema: { type: integer } }
+            X-RateLimit-Remaining: { schema: { type: integer } }
+            X-RateLimit-Reset: { schema: { type: integer }, description: Unix time }
+            X-Daily-Limit: { schema: { type: integer } }
+            X-Daily-Remaining: { schema: { type: integer } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuggestReady" }
+        "202":
+          description: Not cached yet; queued. Repeat the same request after `retry_after_seconds`.
+          headers:
+            Retry-After: { schema: { type: integer } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuggestQueued" }
+        "400":
+          description: Invalid parameter (`invalid_query`, `invalid_lang`, `invalid_country`, `invalid_group`, `source_not_offered`).
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "401":
+          description: Missing or invalid key (`invalid_api_key`).
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "429":
+          description: Limit exceeded (`rate_limited`, `daily_quota_exceeded`, `new_keyword_quota_exceeded`). See `Retry-After`.
+          headers:
+            Retry-After: { schema: { type: integer } }
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "502":
+          description: Fetching this keyword failed recently (`upstream_failed`). Retry after an hour.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "503":
+          description: Fetch queue is full (`queue_full`). See `Retry-After`.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  /usage:
+    get:
+      tags: [account]
+      summary: Usage of your key over the last 30 days and your plan limits
+      operationId: getUsage
+      responses:
+        "200":
+          description: Usage report.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Usage" }
+        "401":
+          description: Missing or invalid key.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  /status:
+    get:
+      tags: [account]
+      summary: Queue depth and worker status (no authentication)
+      operationId: getStatus
+      security: []
+      responses:
+        "200":
+          description: Service status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Status" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "`Authorization: Bearer gsk_...`"
+  schemas:
+    SuggestReady:
+      type: object
+      required: [ok, status, query, source, lang]
+      properties:
+        ok: { type: boolean, example: true }
+        status: { type: string, enum: [ready] }
+        query: { type: string, example: running shoes }
+        source: { type: string, example: google }
+        lang: { type: string, example: en }
+        country: { type: string, nullable: true, example: us }
+        fetched_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        stale:
+          type: boolean
+          description: True when the cache expired and a refresh is in progress; the old data is returned meanwhile.
+        count: { type: integer, description: Only with `flat=1`. }
+        suggestions:
+          type: array
+          description: Only with `flat=1`. Deduplicated.
+          items: { type: string }
+        data:
+          type: object
+          description: Without `flat=1`. Keys are the groups; `itself` is a list, the others map "keyword + x" to a list.
+          additionalProperties: true
+    SuggestQueued:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+        status: { type: string, enum: [queued] }
+        query: { type: string }
+        source: { type: string }
+        lang: { type: string }
+        country: { type: string, nullable: true }
+        queue_position: { type: integer, example: 3 }
+        retry_after_seconds: { type: integer, example: 24 }
+        message: { type: string }
+    Usage:
+      type: object
+      properties:
+        ok: { type: boolean }
+        key_prefix: { type: string }
+        plan: { type: string, example: free }
+        limits:
+          type: object
+          properties:
+            rate_per_min: { type: integer, example: 30 }
+            daily_requests: { type: integer, example: 1000 }
+            new_keywords_per_day: { type: integer, example: 20 }
+        days_utc:
+          type: array
+          items:
+            type: object
+            properties:
+              day: { type: string, format: date }
+              requests: { type: integer }
+              cache_hits: { type: integer }
+              new_keywords: { type: integer }
+              rejected: { type: integer }
+    Status:
+      type: object
+      properties:
+        ok: { type: boolean }
+        status: { type: string, enum: [ok, degraded] }
+        queue_depth: { type: integer }
+        oldest_queued_seconds: { type: integer }
+        worker_heartbeat_seconds_ago: { type: integer, nullable: true }
+        workers_alive: { type: integer }
+        workers_total: { type: integer }
+    Error:
+      type: object
+      properties:
+        ok: { type: boolean, example: false }
+        error:
+          type: object
+          properties:
+            code: { type: string, example: invalid_lang }
+            message: { type: string }

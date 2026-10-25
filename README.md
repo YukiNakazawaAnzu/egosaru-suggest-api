@@ -24,6 +24,14 @@ The examples here handle that loop for you:
 | [`examples/suggest.py`](examples/suggest.py) | `KEY=... python examples/suggest.py "running shoes" --source google --lang en --country us` |
 | [`examples/suggest.mjs`](examples/suggest.mjs) | `KEY=... node examples/suggest.mjs "running shoes" google en us` (Node 18+) |
 
+## More ways to call it
+
+| | |
+|---|---|
+| [`openapi.yaml`](openapi.yaml) | OpenAPI 3.0 description of the three endpoints (import it into Postman, Insomnia, RapidAPI or a code generator) |
+| [`examples/n8n.md`](examples/n8n.md) | n8n with the standard HTTP Request node, plus an importable [workflow](examples/n8n-egosaru-suggest.workflow.json) that handles the 202 retry |
+| [`mcp/`](mcp/) | **Experimental** MCP server so Claude, Cursor and other MCP clients can call the API as a tool |
+
 ## Notes
 
 - Keep the key on your server. If it is in browser JavaScript, anyone can use it.

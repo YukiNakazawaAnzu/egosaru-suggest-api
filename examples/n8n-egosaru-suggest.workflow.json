@@ -1,0 +1,123 @@
+{
+  "name": "Egosaru suggestions (with 202 retry)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1",
+      "name": "Manual trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "q", "name": "q", "value": "running shoes", "type": "string" },
+            { "id": "source", "name": "source", "value": "google", "type": "string" },
+            { "id": "lang", "name": "lang", "value": "en", "type": "string" },
+            { "id": "country", "name": "country", "value": "us", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2",
+      "name": "Keyword",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "url": "=https://gstudio1.com/api/v1/{{ $('Keyword').first().json.source }}/suggest",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "q", "value": "={{ $('Keyword').first().json.q }}" },
+            { "name": "lang", "value": "={{ $('Keyword').first().json.lang }}" },
+            { "name": "country", "value": "={{ $('Keyword').first().json.country }}" },
+            { "name": "flat", "value": "1" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": { "fullResponse": true, "neverError": true, "responseFormat": "json" }
+          }
+        }
+      },
+      "id": "a3",
+      "name": "Egosaru API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "notes": "Credential: Header Auth, name \"Authorization\", value \"Bearer gsk_...\" (your Egosaru key)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 202,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a4",
+      "name": "Queued?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.body.retry_after_seconds || 20 }}",
+        "unit": "seconds"
+      },
+      "id": "a5",
+      "name": "Wait retry_after",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [880, -140],
+      "webhookId": "egosaru-wait"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s", "name": "statusCode", "value": "={{ $json.statusCode }}", "type": "number" },
+            { "id": "n", "name": "count", "value": "={{ $json.body.count }}", "type": "number" },
+            { "id": "l", "name": "suggestions", "value": "={{ $json.body.suggestions }}", "type": "array" },
+            { "id": "e", "name": "error", "value": "={{ $json.body.error }}", "type": "object" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a6",
+      "name": "Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 140]
+    }
+  ],
+  "connections": {
+    "Manual trigger": { "main": [[{ "node": "Keyword", "type": "main", "index": 0 }]] },
+    "Keyword": { "main": [[{ "node": "Egosaru API", "type": "main", "index": 0 }]] },
+    "Egosaru API": { "main": [[{ "node": "Queued?", "type": "main", "index": 0 }]] },
+    "Queued?": {
+      "main": [
+        [{ "node": "Wait retry_after", "type": "main", "index": 0 }],
+        [{ "node": "Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait retry_after": { "main": [[{ "node": "Egosaru API", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
