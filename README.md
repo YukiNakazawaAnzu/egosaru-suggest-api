@@ -37,7 +37,7 @@ The examples here handle that loop for you:
 - Keep the key on your server. If it is in browser JavaScript, anyone can use it.
 - `source` is one of `google bing youtube amazon ebay shopee duckduckgo baidu yandex naver daum yahoo rakuten`. Regional engines work only for the languages listed in the docs (for example `naver` is `ko`, `yandex` is `ru` or `tr`).
 - `lang` takes the 20 site language codes; `country` selects a market within the language (`en` + `gb`, `es` + `mx`, `pt` + `br`, ...).
-- Free plan limits: 30 requests/minute, 1,000/day, 20 new (uncached) keywords/day. Paid plans are coming; the free plan stays.
+- Free plan limits: 30 requests/minute, 1,000/day, 20 new (uncached) keywords/day. Paid plans with higher limits and priority fetching: [pricing](https://gstudio1.com/suggest/en/pricing) (USD 19 / 49 / 149 per month).
 - Questions, missing engines or markets: open an issue, or message [@yknkzw on Telegram](https://t.me/yknkzw).
 
 ## About
