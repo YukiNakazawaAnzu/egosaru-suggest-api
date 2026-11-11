@@ -1,6 +1,6 @@
 # Egosaru Suggest API: examples and clients
 
-[Egosaru](https://gstudio1.com/suggest/en/posts/google) collects autocomplete suggestions from Google, Bing, YouTube, Amazon, eBay, Shopee, DuckDuckGo, Baidu, Yandex, Naver, Daum, Yahoo! and Rakuten, expanded letter by letter, in 20 languages. This repository has small, dependency-free examples for its JSON API.
+[Egosaru](https://gstudio1.com/suggest/en/posts/google) collects autocomplete suggestions from Google, Bing, YouTube, Amazon, eBay, Shopee, DuckDuckGo, Baidu, Yandex, Naver, Daum, Yahoo! and Rakuten, expanded letter by letter, in 50 languages. This repository has small, dependency-free examples for its JSON API.
 
 - Web tool (free, no sign-up): <https://gstudio1.com/suggest/en/posts/google>
 - API documentation: <https://gstudio1.com/api/en/>
@@ -36,7 +36,7 @@ The examples here handle that loop for you:
 
 - Keep the key on your server. If it is in browser JavaScript, anyone can use it.
 - `source` is one of `google bing youtube amazon ebay shopee duckduckgo baidu yandex naver daum yahoo rakuten`. Regional engines work only for the languages listed in the docs (for example `naver` is `ko`, `yandex` is `ru` or `tr`).
-- `lang` takes the 20 site language codes; `country` selects a market within the language (`en` + `gb`, `es` + `mx`, `pt` + `br`, ...).
+- `lang` takes the 50 site language codes (listed in the [API docs](https://gstudio1.com/api/en/)); `country` selects a market within the language (`en` + `gb`, `es` + `mx`, `pt` + `br`, ...).
 - Free plan limits: 30 requests/minute, 1,000/day, 20 new (uncached) keywords/day. Paid plans with higher limits and priority fetching: [pricing](https://gstudio1.com/suggest/en/pricing) (USD 19 / 49 / 149 per month).
 - Questions, missing engines or markets: open an issue, or message [@yknkzw on Telegram](https://t.me/yknkzw).
 
