@@ -4,7 +4,7 @@ info:
   version: "1.0"
   description: |
     Expanded autocomplete suggestions from Google, Bing, YouTube, Amazon, eBay, Shopee, DuckDuckGo and the
-    regional engines (Baidu, Yandex, Naver, Daum, Yahoo!, Rakuten), in 20 languages with selectable countries.
+    regional engines (Baidu, Yandex, Naver, Daum, Yahoo!, Rakuten), in 50 languages with selectable countries.
     Each keyword is expanded with a space, the language's own letters, A-Z and 0-9.
 
     A keyword that is not cached yet is queued: the API answers `202` with `retry_after_seconds`.
@@ -45,7 +45,7 @@ paths:
         - name: lang
           in: query
           required: false
-          description: Language code (default `ja`; set it explicitly). One of the 20 site languages, e.g. en, es, zh, zh-tw, ko, ru, ar, hi, pt, fr, de, id, vi, th, tr, it, pl, uk, nl.
+          description: Language code (default `ja`; set it explicitly). One of the 50 site languages (all listed in the docs at https://gstudio1.com/api/en/), e.g. en, es, zh, zh-tw, ko, ru, ar, hi, pt, fr, de, id, vi, th, tr, it, pl, uk, nl.
           schema: { type: string, default: ja }
           example: en
         - name: country
@@ -181,16 +181,26 @@ components:
             rate_per_min: { type: integer, example: 30 }
             daily_requests: { type: integer, example: 1000 }
             new_keywords_per_day: { type: integer, example: 20 }
-        days_utc:
+        day_timezone: { type: string, example: Asia/Tokyo, description: "Daily quotas reset at 00:00 JST (UTC+9)." }
+        days:
+          description: Last 30 days of usage, newest first. `day` is a Japan (JST) calendar date.
           type: array
           items:
-            type: object
-            properties:
-              day: { type: string, format: date }
-              requests: { type: integer }
-              cache_hits: { type: integer }
-              new_keywords: { type: integer }
-              rejected: { type: integer }
+            $ref: '#/components/schemas/UsageDay'
+        days_utc:
+          deprecated: true
+          description: Same rows as `days` (JST dates since 2026-10-31); kept for existing clients.
+          type: array
+          items:
+            $ref: '#/components/schemas/UsageDay'
+    UsageDay:
+      type: object
+      properties:
+        day: { type: string, format: date }
+        requests: { type: integer }
+        cache_hits: { type: integer }
+        new_keywords: { type: integer }
+        rejected: { type: integer }
     Status:
       type: object
       properties:
